@@ -468,7 +468,7 @@ class SimulatePartialFOV(KL.Layer):
             mask_idx_sup = mask_idx_sup_tmp
 
         # mask input labels
-        mask = tf.map_fn(self._single_build_mask, [x, mask_idx_inf, mask_idx_sup], tf.int32)
+        mask = tf.map_fn(self._single_build_mask, [x, mask_idx_inf, mask_idx_sup], fn_output_signature=tf.int32)
         x = K.switch(tf.squeeze(K.greater(tf.random.uniform([1], 0, 1), 1 - self.prob_mask)), x * mask, x)
 
         # compute dice score for each label value
@@ -481,7 +481,7 @@ class SimulatePartialFOV(KL.Layer):
 
         # crop input labels
         if self.crop_max_val > 0:
-            x_cropped = tf.map_fn(self._single_slice, [x, crop_idx_inf], dtype=tf.float32)
+            x_cropped = tf.map_fn(self._single_slice, [x, crop_idx_inf], fn_output_signature=tf.float32)
         else:
             x_cropped = x
 
