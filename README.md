@@ -1,5 +1,24 @@
 # SynthSeg
 
+----------------
+
+### Installation (by Vicent Caselles Ballester)
+
+To install SynthSeg, you should have `python==3.8` installed on your machine, then run the following code:
+
+````bash
+git clone git@github.com:vcasellesb/SynthSeg.git
+cd SynthSeg
+pip install -e .
+````
+
+If installation does not work, please try updating `pip`, `setuptools` and `wheel`, e.g.:
+
+```bash
+pip install --upgrade pip setuptools wheel
+```
+
+----------------
 
 In this repository, we present SynthSeg, the first deep learning tool for segmentation of brain scans of
 any contrast and resolution. SynthSeg works out-of-the-box without any retraining, and is robust to:
