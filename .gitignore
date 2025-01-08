@@ -33,4 +33,4 @@ SynthSeg/training_vae.py
 SynthSeg/validate_vae.py
 
 outputs_tutorial_*/
-.DS_Store/
+.DS_Store
