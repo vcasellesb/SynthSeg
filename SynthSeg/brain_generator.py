@@ -54,6 +54,7 @@ class BrainGenerator:
                  randomise_res=True,
                  max_res_iso=4.,
                  max_res_aniso=8.,
+                 dim_rand_res: int = None,
                  data_res=None,
                  thickness=None,
                  bias_field_std=.7,
@@ -250,6 +251,7 @@ class BrainGenerator:
         self.randomise_res = randomise_res
         self.max_res_iso = max_res_iso
         self.max_res_aniso = max_res_aniso
+        self.dim_rand_res = dim_rand_res
         self.data_res = utils.load_array_if_path(data_res)
         assert not (self.randomise_res & (self.data_res is not None)), \
             'randomise_res and data_res cannot be provided at the same time'
@@ -290,6 +292,7 @@ class BrainGenerator:
                                                 randomise_res=self.randomise_res,
                                                 max_res_iso=self.max_res_iso,
                                                 max_res_aniso=self.max_res_aniso,
+                                                dim_rand_res = self.dim_rand_res,
                                                 data_res=self.data_res,
                                                 thickness=self.thickness,
                                                 bias_field_std=self.bias_field_std,

@@ -532,6 +532,7 @@ class SampleResolution(Layer):
                  min_resolution,
                  max_res_iso=None,
                  max_res_aniso=None,
+                 dim_rand_res: int = None,
                  prob_iso=0.1,
                  prob_min=0.05,
                  return_thickness=True,
@@ -542,6 +543,7 @@ class SampleResolution(Layer):
         self.max_res_iso = None
         self.max_res_aniso_input = max_res_aniso
         self.max_res_aniso = None
+        self.dim_rand_res = dim_rand_res
         self.prob_iso = prob_iso
         self.prob_min = prob_min
         self.return_thickness = return_thickness
@@ -603,7 +605,10 @@ class SampleResolution(Layer):
         # https://github.com/BBillot/SynthSeg/issues/89#issuecomment-2282773872
         if not self.add_batchsize:
             shape = [self.n_dims]
-            dim = tf.random.uniform(shape=(1, 1), minval=0, maxval=self.n_dims, dtype='int32')
+            if self.dim_rand_res is None:
+                dim = tf.random.uniform(shape=(1, 1), minval=0, maxval=self.n_dims, dtype='int32')
+            else:
+                dim = tf.constant([[self.dim_rand_res]], shape=(1, 1), dtype='int32')
             mask = tf.tensor_scatter_nd_update(tf.zeros([self.n_dims], dtype='bool'), dim,
                                                tf.convert_to_tensor([True], dtype='bool'))
             self.min_res_tens_tiled = self.min_res_tens
@@ -613,9 +618,14 @@ class SampleResolution(Layer):
             self.min_res_tens_tiled = tf.tile(tf.expand_dims(self.min_res_tens, 0), tile_shape)
 
             shape = tf.concat([batch, tf.convert_to_tensor([self.n_dims], dtype='int32')], axis=0)
-            indices = tf.stack([tf.range(0, batch[0]), tf.random.uniform(batch, 0, self.n_dims, dtype='int32')], 1)
+            if self.dim_rand_res is None:
+                dim = tf.random.uniform(batch, 0, self.n_dims, dtype='int32')
+            else:
+                dim = tf.convert_to_tensor(self.dim_rand_res, dtype='int32')
+                dim = tf.reshape(dim, batch)
+            indices = tf.stack([tf.range(0, batch[0]), dim], 1)
             mask = tf.tensor_scatter_nd_update(tf.zeros(shape, dtype='bool'), indices, tf.ones(batch, dtype='bool'))
-
+        
         # return min resolution as tensor if min=max
         if (self.max_res_iso is None) & (self.max_res_aniso is None):
             new_resolution = self.min_res_tens_tiled

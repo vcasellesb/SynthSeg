@@ -47,6 +47,7 @@ def labels_to_image_model(labels_shape,
                           randomise_res=False,
                           max_res_iso=4.,
                           max_res_aniso=8.,
+                          dim_rand_res: int = None,
                           data_res=None,
                           thickness=None,
                           bias_field_std=.5,
@@ -198,7 +199,7 @@ def labels_to_image_model(labels_shape,
             max_res_iso = np.array(utils.reformat_to_list(max_res_iso, length=n_dims, dtype='float'))
             max_res_aniso = np.array(utils.reformat_to_list(max_res_aniso, length=n_dims, dtype='float'))
             max_res = np.maximum(max_res_iso, max_res_aniso)
-            resolution, blur_res = layers.SampleResolution(atlas_res, max_res_iso, max_res_aniso)(means_input)
+            resolution, blur_res = layers.SampleResolution(atlas_res, max_res_iso, max_res_aniso, dim_rand_res)(means_input)
             sigma = l2i_et.blurring_sigma_for_downsampling(atlas_res, resolution, thickness=blur_res)
             channel = layers.DynamicGaussianBlur(0.75 * max_res / np.array(atlas_res), 1.03)([channel, sigma])
             channel = layers.MimicAcquisition(atlas_res, atlas_res, output_shape, False)([channel, resolution])
