@@ -73,7 +73,13 @@ from scipy.ndimage.morphology import distance_transform_edt
 # ---------------------------------------------- loading/saving functions ----------------------------------------------
 
 
-def load_volume(path_volume, im_only=True, squeeze=True, dtype=None, aff_ref=None):
+def load_volume(
+        path_volume: str, 
+        im_only: bool = True, 
+        squeeze: bool = True, 
+        dtype = None, 
+        aff_ref: np.ndarray = None
+    ):
     """
     Load volume file.
     :param path_volume: path of the volume to load. Can either be a nii, nii.gz, mgz, or npz format.
@@ -119,7 +125,15 @@ def load_volume(path_volume, im_only=True, squeeze=True, dtype=None, aff_ref=Non
         return volume, aff, header
 
 
-def save_volume(volume, aff, header, path, res=None, dtype=None, n_dims=3):
+def save_volume(
+        volume: np.ndarray,
+        aff: np.ndarray,
+        header,
+        path: str,
+        res = None,
+        dtype = None,
+        n_dims: int = 3
+    ):
     """
     Save a volume.
     :param volume: volume to save
@@ -160,7 +174,12 @@ def save_volume(volume, aff, header, path, res=None, dtype=None, n_dims=3):
         nib.save(nifty, path)
 
 
-def get_volume_info(path_volume, return_volume=False, aff_ref=None, max_channels=10):
+def get_volume_info(
+        path_volume: str, 
+        return_volume: bool = False, 
+        aff_ref: np.ndarray = None, 
+        max_channels: int = 10
+    ):
     """
     Gather information about a volume: shape, affine matrix, number of dimensions and channels, header, and resolution.
     :param path_volume: path of the volume to get information form.
@@ -400,7 +419,7 @@ def reformat_to_n_channels_array(var, n_dims=3, n_channels=1):
 # ----------------------------------------------- path-related functions -----------------------------------------------
 
 
-def list_images_in_folder(path_dir, include_single_image=True, check_if_empty=True):
+def list_images_in_folder(path_dir: str, include_single_image: bool = True, check_if_empty: bool = True):
     """List all files with extension nii, nii.gz, mgz, or npz within a folder."""
     basename = os.path.basename(path_dir)
     if include_single_image & \
@@ -488,7 +507,7 @@ def list_subfolders(path_dir, whole_path=True, expr=None, cond_type='or'):
     return subdirs_list
 
 
-def get_image_extension(path):
+def get_image_extension(path: str) -> str:
     name = os.path.basename(path)
     if name[-7:] == '.nii.gz':
         return 'nii.gz'
@@ -500,7 +519,7 @@ def get_image_extension(path):
         return 'npz'
 
 
-def strip_extension(path):
+def strip_extension(path: str) -> str:
     """Strip classical image extensions (.nii.gz, .nii, .mgz, .npz) from a filename."""
     return path.replace('.nii.gz', '').replace('.nii', '').replace('.mgz', '').replace('.npz', '')
 
@@ -534,7 +553,7 @@ def strip_suffix(path):
     return path
 
 
-def mkdir(path_dir):
+def mkdir(path_dir: str) -> None:
     """Recursively creates the current dir as well as its parent folders if they do not already exist."""
     if path_dir[-1] == '/':
         path_dir = path_dir[:-1]
