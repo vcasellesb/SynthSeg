@@ -618,11 +618,15 @@ class SampleResolution(Layer):
             self.min_res_tens_tiled = tf.tile(tf.expand_dims(self.min_res_tens, 0), tile_shape)
 
             shape = tf.concat([batch, tf.convert_to_tensor([self.n_dims], dtype='int32')], axis=0)
+            
+            # if dim_rand_res is not specified, we randomly choose which dimension
+            # to resample. Otherwise, use the specified one.
             if self.dim_rand_res is None:
                 dim = tf.random.uniform(batch, 0, self.n_dims, dtype='int32')
             else:
                 dim = tf.convert_to_tensor(self.dim_rand_res, dtype='int32')
                 dim = tf.reshape(dim, batch)
+            
             indices = tf.stack([tf.range(0, batch[0]), dim], 1)
             mask = tf.tensor_scatter_nd_update(tf.zeros(shape, dtype='bool'), indices, tf.ones(batch, dtype='bool'))
         
