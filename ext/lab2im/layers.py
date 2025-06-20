@@ -1144,7 +1144,7 @@ class IntensityAugmentation(Layer):
     :param prob_gamma: probability to apply gamma augmentation
     """
 
-    def __init__(self, noise_std=0, clip=0, normalise=True, norm_perc=0, gamma_std=0, contrast_inversion=False,
+    def __init__(self, noise_std=0, clip=0, normalise: str = None, norm_perc=0, gamma_std=0, contrast_inversion=False,
                  separate_channels=True, prob_noise=0.95, prob_gamma=1, **kwargs):
 
         # shape attributes
@@ -1233,35 +1233,71 @@ class IntensityAugmentation(Layer):
         if self.clip_values is not None:
             inputs = K.clip(inputs, self.clip_values[0], self.clip_values[1])
 
-        # normalise
-        if self.normalise:
-            # define robust min and max by sorting values and taking percentile
-            if self.perc is not None:
-                if self.separate_channels:
-                    shape = tf.concat([batchsize, self.flatten_shape * self.one, self.n_channels * self.one], 0)
-                else:
-                    shape = tf.concat([batchsize, self.flatten_shape * self.one], 0)
-                intensities = tf.sort(tf.reshape(inputs, shape), axis=1)
-                m = intensities[:, max(int(self.perc[0] * self.flatten_shape), 0), ...]
-                M = intensities[:, min(int(self.perc[1] * self.flatten_shape), self.flatten_shape - 1), ...]
-            # simple min and max
-            else:
-                m = K.min(inputs, axis=list(range(1, self.expand_minmax_dim + 1)))
-                M = K.max(inputs, axis=list(range(1, self.expand_minmax_dim + 1)))
-            # normalise
-            m = l2i_et.expand_dims(m, axis=[1] * self.expand_minmax_dim)
-            M = l2i_et.expand_dims(M, axis=[1] * self.expand_minmax_dim)
-            inputs = tf.clip_by_value(inputs, m, M)
-            inputs = (inputs - m) / (M - m + K.epsilon())
 
+        if self.normalise:
+            if self.normalise == "minmax":
+                # define robust min and max by sorting values and taking percentile
+                if self.perc is not None:
+                    if self.separate_channels:
+                        shape = tf.concat([batchsize, self.flatten_shape * self.one, self.n_channels * self.one], 0)
+                    else:
+                        shape = tf.concat([batchsize, self.flatten_shape * self.one], 0)
+                    intensities = tf.sort(tf.reshape(inputs, shape), axis=1)
+                    m = intensities[:, max(int(self.perc[0] * self.flatten_shape), 0), ...]
+                    M = intensities[:, min(int(self.perc[1] * self.flatten_shape), self.flatten_shape - 1), ...]
+                # simple min and max
+                else:
+                    m = K.min(inputs, axis=list(range(1, self.expand_minmax_dim + 1)))
+                    M = K.max(inputs, axis=list(range(1, self.expand_minmax_dim + 1)))
+                
+                # normalise
+                m = l2i_et.expand_dims(m, axis=[1] * self.expand_minmax_dim)
+                M = l2i_et.expand_dims(M, axis=[1] * self.expand_minmax_dim)
+                inputs = tf.clip_by_value(inputs, m, M)
+                inputs = (inputs - m) / (M - m + K.epsilon())
+            elif self.normalise == "zscore":
+                # define robust mean and std.
+                if self.perc is not None:
+                    if self.separate_channels:
+                        shape = tf.concat([batchsize, self.flatten_shape * self.one, self.n_channels * self.one], 0)
+                    else:
+                        shape = tf.concat([batchsize, self.flatten_shape * self.one], 0)
+                    intensities = tf.sort(tf.reshape(inputs, shape), axis=1)
+                    min_perc = max(int(self.perc[0] * self.flatten_shape), 0)
+                    max_perc = min(int(self.perc[1] * self.flatten_shape), self.flatten_shape - 1)
+                    these_intensities = intensities[:, min_perc:max_perc, ...]
+                    # compute mean and std along the flattened ndim dimension
+                    mean = K.mean(these_intensities, axis=[1])
+                    std = K.std(these_intensities, axis=[1])
+                else:
+                    mean = K.mean(inputs, axis=list(range(1, self.expand_minmax_dim + 1)))
+                    std = K.std(inputs, axis=list(range(1, self.expand_minmax_dim + 1)))
+                
+                # normalise
+                mean = l2i_et.expand_dims(mean, axis=[1] * self.expand_minmax_dim)
+                std = l2i_et.expand_dims(std, axis=[1] * self.expand_minmax_dim)
+                inputs = (inputs - mean) / (std + K.epsilon())
+            else:
+                raise ValueError(f'Invalid normalization scheme. Options are: ["zscore", "minmax"]. Got "{self.normalise}."')
+
+        # since zscore norm entails negative numbers, X^1/2 gives Nan.
+        # I use the workaround from 
+        # https://torchio.readthedocs.io/_modules/torchio/transforms/augmentation/intensity/random_gamma.html#RandomGamma
+        def _power(X, gamma):
+            if K.min(X) < 0:
+                output = tf.math.sign(X) * tf.math.pow(tf.math.abs(X), gamma)
+            else:
+                output = tf.math.pow(X, gamma)
+            return output
+        
         # apply voxel-wise exponentiation with predefined probability
         if self.gamma_std > 0:
             gamma = tf.random.normal(sample_shape, stddev=self.gamma_std)
             if self.prob_gamma == 1:
-                inputs = tf.math.pow(inputs, tf.math.exp(gamma))
+                inputs = _power(inputs, tf.math.exp(gamma))
             else:
                 inputs = K.switch(tf.squeeze(K.less(tf.random.uniform([1], 0, 1), self.prob_gamma)),
-                                  tf.math.pow(inputs, tf.math.exp(gamma)), inputs)
+                                  _power(inputs, tf.math.exp(gamma)), inputs)
 
         # apply random contrast inversion
         if self.contrast_inversion:

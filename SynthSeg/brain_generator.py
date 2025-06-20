@@ -15,6 +15,7 @@ License.
 
 
 # python imports
+from typing import Optional
 import numpy as np
 
 # project imports
@@ -59,7 +60,8 @@ class BrainGenerator:
                  thickness=None,
                  bias_field_std=.7,
                  bias_scale=.025,
-                 return_gradients=False):
+                 return_gradients=False,
+                 normalise: Optional[str] = 'minmax'):
         """
         This class is wrapper around the labels_to_image_model model. It contains the GPU model that generates images
         from labels maps, and a python generator that supplies the input data for this model.
@@ -261,6 +263,9 @@ class BrainGenerator:
         self.bias_scale = bias_scale
         self.return_gradients = return_gradients
 
+        assert normalise is None or normalise in ['minmax', 'zscore']
+        self.normalise = normalise
+
         # build transformation model
         self.labels_to_image_model, self.model_output_shape = self._build_labels_to_image_model()
 
@@ -297,7 +302,8 @@ class BrainGenerator:
                                                 thickness=self.thickness,
                                                 bias_field_std=self.bias_field_std,
                                                 bias_scale=self.bias_scale,
-                                                return_gradients=self.return_gradients)
+                                                return_gradients=self.return_gradients,
+                                                normalise=self.normalise)
         out_shape = lab_to_im_model.output[0].get_shape().as_list()[1:]
         return lab_to_im_model, out_shape
 
