@@ -61,7 +61,8 @@ class BrainGenerator:
                  bias_field_std=.7,
                  bias_scale=.025,
                  return_gradients=False,
-                 normalise: Optional[str] = 'minmax'):
+                 normalise: Optional[str] = 'minmax',
+                 scan_clipping_bounds = 300):
         """
         This class is wrapper around the labels_to_image_model model. It contains the GPU model that generates images
         from labels maps, and a python generator that supplies the input data for this model.
@@ -266,6 +267,9 @@ class BrainGenerator:
         assert normalise is None or normalise in ['minmax', 'zscore']
         self.normalise = normalise
 
+        # this clips synthetic scans to a given upper bound
+        self.scan_clipping_bounds = scan_clipping_bounds
+
         # build transformation model
         self.labels_to_image_model, self.model_output_shape = self._build_labels_to_image_model()
 
@@ -303,7 +307,8 @@ class BrainGenerator:
                                                 bias_field_std=self.bias_field_std,
                                                 bias_scale=self.bias_scale,
                                                 return_gradients=self.return_gradients,
-                                                normalise=self.normalise)
+                                                normalise=self.normalise,
+                                                clipping_bounds=self.scan_clipping_bounds)
         out_shape = lab_to_im_model.output[0].get_shape().as_list()[1:]
         return lab_to_im_model, out_shape
 
