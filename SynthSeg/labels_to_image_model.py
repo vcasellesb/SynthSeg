@@ -55,6 +55,7 @@ def labels_to_image_model(labels_shape,
                           bias_scale=.025,
                           return_gradients=False,
                           normalise: Optional[str] = None,
+                          gamma_std: float = 0.5,
                           clipping_bounds = 300):
     """
     This function builds a keras/tensorflow model to generate images from provided label maps.
@@ -191,7 +192,7 @@ def labels_to_image_model(labels_shape,
         image = layers.BiasFieldCorruption(bias_field_std, bias_scale, False)(image)
 
     # intensity augmentation
-    image = layers.IntensityAugmentation(clip=clipping_bounds, normalise=normalise, gamma_std=.5, separate_channels=True)(image)
+    image = layers.IntensityAugmentation(clip=clipping_bounds, normalise=normalise, gamma_std=gamma_std, separate_channels=True)(image)
 
     # loop over channels
     channels = list()

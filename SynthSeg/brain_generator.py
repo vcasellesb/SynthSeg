@@ -30,6 +30,7 @@ class BrainGenerator:
 
     def __init__(self,
                  labels_dir,
+                 *,
                  generation_labels=None,
                  n_neutral_labels=None,
                  output_labels=None,
@@ -62,6 +63,7 @@ class BrainGenerator:
                  bias_scale=.025,
                  return_gradients=False,
                  normalise: Optional[str] = 'minmax',
+                 gamma_std: float = 0.5,
                  scan_clipping_bounds = 300):
         """
         This class is wrapper around the labels_to_image_model model. It contains the GPU model that generates images
@@ -266,6 +268,7 @@ class BrainGenerator:
 
         assert normalise is None or normalise in ['minmax', 'zscore']
         self.normalise = normalise
+        self.gamma_std = gamma_std
 
         # this clips synthetic scans to a given upper bound
         self.scan_clipping_bounds = scan_clipping_bounds
@@ -308,6 +311,7 @@ class BrainGenerator:
                                                 bias_scale=self.bias_scale,
                                                 return_gradients=self.return_gradients,
                                                 normalise=self.normalise,
+                                                gamma_std=self.gamma_std,
                                                 clipping_bounds=self.scan_clipping_bounds)
         out_shape = lab_to_im_model.output[0].get_shape().as_list()[1:]
         return lab_to_im_model, out_shape
