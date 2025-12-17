@@ -603,6 +603,8 @@ class SampleResolution(Layer):
         # I refer the reader (most likely future me) to the following github issues:
         # https://github.com/neuronets/nobrainer/issues/338#issuecomment-2282768104
         # https://github.com/BBillot/SynthSeg/issues/89#issuecomment-2282773872
+
+        # the following section chooses dimension to simulate as anisotropic
         if not self.add_batchsize:
             shape = [self.n_dims]
             if self.dim_rand_res is None:
@@ -618,7 +620,7 @@ class SampleResolution(Layer):
             self.min_res_tens_tiled = tf.tile(tf.expand_dims(self.min_res_tens, 0), tile_shape)
 
             shape = tf.concat([batch, tf.convert_to_tensor([self.n_dims], dtype='int32')], axis=0)
-            
+
             # if dim_rand_res is not specified, we randomly choose which dimension
             # to resample. Otherwise, use the specified one.
             if self.dim_rand_res is None:
@@ -626,10 +628,10 @@ class SampleResolution(Layer):
             else:
                 dim = tf.convert_to_tensor(self.dim_rand_res, dtype='int32')
                 dim = tf.reshape(dim, batch)
-            
+
             indices = tf.stack([tf.range(0, batch[0]), dim], 1)
             mask = tf.tensor_scatter_nd_update(tf.zeros(shape, dtype='bool'), indices, tf.ones(batch, dtype='bool'))
-        
+
         # return min resolution as tensor if min=max
         if (self.max_res_iso is None) & (self.max_res_aniso is None):
             new_resolution = self.min_res_tens_tiled

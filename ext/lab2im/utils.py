@@ -74,12 +74,12 @@ from scipy.ndimage.morphology import distance_transform_edt
 
 
 def load_volume(
-        path_volume: str, 
-        im_only: bool = True, 
-        squeeze: bool = True, 
-        dtype = None, 
-        aff_ref: np.ndarray = None
-    ):
+    path_volume: str,
+    im_only: bool = True,
+    squeeze: bool = True,
+    dtype = None,
+    aff_ref: np.ndarray = None
+):
     """
     Load volume file.
     :param path_volume: path of the volume to load. Can either be a nii, nii.gz, mgz, or npz format.
@@ -126,14 +126,14 @@ def load_volume(
 
 
 def save_volume(
-        volume: np.ndarray,
-        aff: np.ndarray,
-        header,
-        path: str,
-        res = None,
-        dtype = None,
-        n_dims: int = 3
-    ):
+    volume: np.ndarray,
+    aff: np.ndarray,
+    header,
+    path: str,
+    res = None,
+    dtype = None,
+    n_dims: int = 3
+):
     """
     Save a volume.
     :param volume: volume to save
@@ -175,11 +175,11 @@ def save_volume(
 
 
 def get_volume_info(
-        path_volume: str, 
-        return_volume: bool = False, 
-        aff_ref: np.ndarray = None, 
-        max_channels: int = 10
-    ):
+    path_volume: str, 
+    return_volume: bool = False, 
+    aff_ref: np.ndarray = None, 
+    max_channels: int = 10
+):
     """
     Gather information about a volume: shape, affine matrix, number of dimensions and channels, header, and resolution.
     :param path_volume: path of the volume to get information form.
@@ -1074,3 +1074,12 @@ def build_exp(x, first, last, fix_point):
     b = first - last
     c = - (1 / fix_point[0]) * np.log((fix_point[1] - last) / (first - last))
     return a + b * np.exp(-c * x)
+
+
+# yours truly ¡is very dumb
+if __name__ == "__main__":
+    inshape = np.array([128, 128, 128])
+    nonlin_scale=.04
+    ndims = 3
+    small_shape = get_resample_shape(inshape, nonlin_scale, ndims)
+    assert np.allclose(np.ceil(inshape * nonlin_scale), small_shape[:ndims])
